@@ -1388,9 +1388,13 @@ dialog.sheet::backdrop { background: rgb(10 14 20 / 0.55); }
     // space), and explain what happened.
     } catch (e2) {
       if (uploaded.length) sb.storage.from(BUCKET).remove(uploaded);
+      const failure = e2?.error;
+      const reason = failure?.message || failure?.error_description || (e2 instanceof Error ? e2.message : "");
+      const networkIssue = /fetch|network|timed out|load failed/i.test(reason);
+      const detail = reason ? `: ${reason}` : "";
       err.textContent = e2?.photo
-        ? "A photo didn't upload after 3 tries. The network may be blocking it: press Post listing again, or try without that photo."
-        : "Couldn't post after 3 tries. The network may be blocking it: press Post listing again in a minute.";
+        ? `Photo upload failed${detail}${networkIssue ? ". Check your connection and try again, or remove the photo." : "."}`
+        : `Listing failed to save${detail}${networkIssue ? ". Check your connection and try again." : "."}`;
     // Either way, turn the Post button back on.
     } finally {
       save.disabled = false;
